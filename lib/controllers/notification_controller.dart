@@ -24,7 +24,6 @@ class NotificationController extends GetxController {
 
     isLoading.value = true;
     
-    // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
     
     isLoading.value = false;

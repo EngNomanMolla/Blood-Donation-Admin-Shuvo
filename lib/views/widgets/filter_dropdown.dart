@@ -25,15 +25,8 @@ class FilterDropdown extends StatelessWidget {
         border: Border.all(
           color: value != null 
             ? const Color(0xFFE91E63).withValues(alpha: 0.3) 
-            : Colors.transparent
+            : Colors.grey.shade200
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(

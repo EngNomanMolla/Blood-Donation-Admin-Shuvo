@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../models/user_model.dart';
-import '../../routes/app_pages.dart';
 import 'blood_group_badge.dart';
 
 class UserCard extends StatelessWidget {

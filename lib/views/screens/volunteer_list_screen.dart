@@ -10,45 +10,34 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 12),
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: _buildFilterRow(),
+              ),
+              const SizedBox(height: 16),
+              _buildTabBar(),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  physics: const BouncingScrollPhysics(),
                   children: [
-                    const SizedBox(height: 20),
-                    _buildSearchBar(),
-                    const SizedBox(height: 16),
-                    _buildFilterRow(),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Verified Volunteers'),
-                    const SizedBox(height: 12),
-                    Obx(() => ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: controller.volunteers.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            return VolunteerItemCard(
-                                volunteer: controller.volunteers[index]);
-                          },
-                        )),
-                    const SizedBox(height: 24),
-                    _buildVolunteerRequestSection(),
-                    const SizedBox(height: 24),
+                    _buildVolunteersTab(),
+                    _buildRequestsTab(),
+                    _buildRejectedTab(),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -87,7 +76,7 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Volunteer List',
+                  'Volunteer Panel',
                   style: TextStyle(
                     color: Color(0xFF1A1A2E),
                     fontSize: 22,
@@ -97,7 +86,7 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
                 ),
                 const SizedBox(height: 2),
                 Obx(() => Text(
-                      '${controller.volunteers.length} active volunteers',
+                      '${controller.volunteers.length} active volunteers · ${controller.newCount} pending requests',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 13,
@@ -107,59 +96,7 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE91E63).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.medical_services_rounded,
-              color: Color(0xFFE91E63),
-              size: 24,
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-
-  // ── Search Bar ─────────────────────────────────────────────────────────────
-
-  Widget _buildSearchBar() {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: TextField(
-          onChanged: controller.onChangeSearch,
-          decoration: InputDecoration(
-            hintText: 'Search by name, blood group...',
-            hintStyle: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 14,
-            ),
-            border: InputBorder.none,
-            isDense: true,
-            icon: Icon(
-              Icons.search,
-              color: Colors.grey.shade500,
-              size: 20,
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -192,80 +129,288 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
                 items: controller.upazilas,
                 onChanged: controller.selectUpazila,
               ),
-              const SizedBox(width: 8),
-              FilterDropdown(
-                hint: 'Thana',
-                value: controller.selectedThana.value,
-                items: controller.thanas,
-                onChanged: controller.selectThana,
-              ),
             ],
           )),
     );
   }
 
-  // ── Section Title ──────────────────────────────────────────────────────────
+  // ── Tab Bar ────────────────────────────────────────────────────────────────
 
-  Widget _buildSectionTitle(String title, {int? newCount}) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A2E),
-              letterSpacing: -0.5,
-            ),
-          ),
-        ),
-        if (newCount != null && newCount > 0) ...[
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE91E63).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '($newCount New)',
-              style: const TextStyle(
-                color: Color(0xFFE91E63),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+  Widget _buildTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
-      ],
+      ),
+      child: TabBar(
+        labelColor: const Color(0xFFE91E63),
+        unselectedLabelColor: Colors.grey.shade500,
+        indicatorColor: Colors.transparent,
+        indicator: const UnderlineTabIndicator(borderSide: BorderSide.none),
+        dividerColor: Colors.transparent,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 13,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+        ),
+        tabs: const [
+          Tab(text: 'Volunteers'),
+          Tab(text: 'Requests'),
+          Tab(text: 'Rejected'),
+        ],
+      ),
     );
   }
 
-  // ── Volunteer Request Section ──────────────────────────────────────────────
+  // ── Tab 1: Volunteers ──────────────────────────────────────────────────────
 
-  Widget _buildVolunteerRequestSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Obx(() => _buildSectionTitle('Active Requests',
-            newCount: controller.newCount)),
-        const SizedBox(height: 16),
-        Obx(() => ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.requests.length,
+  Widget _buildVolunteersTab() {
+    return Obx(() {
+      if (controller.isLoadingRequests.value && controller.volunteers.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFE91E63),
+            strokeWidth: 3,
+          ),
+        );
+      }
+      if (controller.volunteers.isEmpty) {
+        return _buildEmptyState('No verified volunteers found');
+      }
+
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        itemCount: controller.volunteers.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          return VolunteerItemCard(volunteer: controller.volunteers[index]);
+        },
+      );
+    });
+  }
+
+  // ── Tab 2: Requests ────────────────────────────────────────────────────────
+
+  Widget _buildRequestsTab() {
+    return Obx(() {
+      if (controller.isLoadingRequests.value && controller.pendingRequests.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFE91E63),
+            strokeWidth: 3,
+          ),
+        );
+      }
+      if (controller.pendingRequests.isEmpty) {
+        return _buildEmptyState('No pending requests found');
+      }
+
+      return Column(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              physics: const BouncingScrollPhysics(),
+              itemCount: controller.pendingRequests.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
+                final item = controller.pendingRequests[index];
                 return VolunteerRequestCard(
-                  request: controller.requests[index],
-                  onAccept: () => controller.accept(index),
-                  onSuspend: () => controller.suspend(index),
+                  request: item,
+                  onAccept: () => controller.accept(item.id),
+                  onSuspend: () => controller.suspend(item.id),
                 );
               },
-            )),
-      ],
+            ),
+          ),
+          _buildPaginationControls(),
+          const SizedBox(height: 16),
+        ],
+      );
+    });
+  }
+
+  // ── Tab 3: Rejected ────────────────────────────────────────────────────────
+
+  Widget _buildRejectedTab() {
+    return Obx(() {
+      if (controller.isLoadingRequests.value && controller.suspendedRequests.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFE91E63),
+            strokeWidth: 3,
+          ),
+        );
+      }
+      if (controller.suspendedRequests.isEmpty) {
+        return _buildEmptyState('No rejected requests found');
+      }
+
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        physics: const BouncingScrollPhysics(),
+        itemCount: controller.suspendedRequests.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final item = controller.suspendedRequests[index];
+          return VolunteerRequestCard(
+            request: item,
+            onAccept: () => controller.accept(item.id),
+            onSuspend: () => controller.suspend(item.id),
+          );
+        },
+      );
+    });
+  }
+
+  // ── Empty State ────────────────────────────────────────────────────────────
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.people_alt_rounded,
+              color: Colors.grey.shade300,
+              size: 48,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  // ── Pagination Controls ────────────────────────────────────────────────────
+
+  Widget _buildPaginationControls() {
+    return Obx(() {
+      final current = controller.currentPage.value;
+      final total = controller.totalPages.value;
+
+      if (total <= 1) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Prev Button
+            InkWell(
+              onTap: current > 1 ? () => controller.fetchVolunteerRequests(current - 1) : null,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: current > 1 ? Colors.white : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: current > 1 ? Colors.grey.shade300 : Colors.grey.shade200,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Prev',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Page Indicator
+            Text(
+              'Page $current of $total',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
+            // Next Button
+            InkWell(
+              onTap: current < total ? () => controller.fetchVolunteerRequests(current + 1) : null,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: current < total ? Colors.white : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: current < total ? Colors.grey.shade300 : Colors.grey.shade200,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Next',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

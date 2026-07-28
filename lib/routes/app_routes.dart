@@ -11,6 +11,10 @@ abstract class Routes {
   static const VOLUNTEER_PROFILE = _Paths.VOLUNTEER_PROFILE;
   static const SEND_NOTIFICATION = _Paths.SEND_NOTIFICATION;
   static const USER_DETAILS = _Paths.USER_DETAILS;
+  static const RECHARGE_REQUESTS = _Paths.RECHARGE_REQUESTS;
+  static const SUBSCRIPTION_PLANS = _Paths.SUBSCRIPTION_PLANS;
+  static const LOGIN = _Paths.LOGIN;
+  static const REGISTER = _Paths.REGISTER;
 }
 
 abstract class _Paths {
@@ -24,4 +28,8 @@ abstract class _Paths {
   static const VOLUNTEER_PROFILE = '/volunteer-profile';
   static const SEND_NOTIFICATION = '/send-notification';
   static const USER_DETAILS = '/user-details';
+  static const RECHARGE_REQUESTS = '/recharge-requests';
+  static const SUBSCRIPTION_PLANS = '/subscription-plans';
+  static const LOGIN = '/login';
+  static const REGISTER = '/register';
 }

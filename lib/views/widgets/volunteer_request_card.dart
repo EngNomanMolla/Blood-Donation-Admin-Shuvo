@@ -76,14 +76,14 @@ class VolunteerRequestCard extends StatelessWidget {
                   children: [
                     ThemeActionButton(
                       label: 'Accept',
-                      isActive: request.status == VolunteerStatus.accepted,
+                      isActive: request.status.toLowerCase() == 'accepted',
                       activeColor: const Color(0xFF2E7D32),
                       onTap: onAccept,
                     ),
                     const SizedBox(width: 8),
                     ThemeActionButton(
                       label: 'Suspend',
-                      isActive: request.status == VolunteerStatus.suspended,
+                      isActive: request.status.toLowerCase() == 'suspended',
                       activeColor: const Color(0xFFE91E63),
                       onTap: onSuspend,
                     ),
