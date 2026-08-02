@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../routes/app_pages.dart';
+import '../utils/error_handler.dart';
 
 class AuthController extends GetxController {
   // Login Controllers
@@ -123,7 +124,7 @@ class AuthController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'An error occurred: $e',
+        ErrorHandler.getErrorMessage(e),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
@@ -246,7 +247,7 @@ class AuthController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'An error occurred: $e',
+        ErrorHandler.getErrorMessage(e),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
@@ -262,16 +263,21 @@ class AuthController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('admin_token');
 
-      if (token != null) {
+      if (token != null && token != 'authenticated') {
         // Hitting backend logout endpoint
-        await _connect.post(
-          '$baseUrl/admin/logout',
-          {},
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        );
+        try {
+          await _connect.post(
+            '$baseUrl/admin/logout',
+            {},
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          );
+        } catch (e) {
+          // Log network or other request-level errors, but still proceed to clear local token
+          debugPrint('Backend logout request failed: $e');
+        }
       }
 
       await prefs.remove('admin_token');
@@ -293,7 +299,7 @@ class AuthController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to log out: $e',
+        ErrorHandler.getErrorMessage(e),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,

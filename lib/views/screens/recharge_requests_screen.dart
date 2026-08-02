@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/recharge_controller.dart';
 import '../widgets/recharge_request_card.dart';
-import '../widgets/filter_dropdown.dart';
 
 class RechargeRequestsScreen extends GetView<RechargeController> {
   const RechargeRequestsScreen({super.key});
@@ -211,8 +210,18 @@ class RechargeRequestsScreen extends GetView<RechargeController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFilterRow(),
+        const Text(
+          'Transactions',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1A1A2E),
+            letterSpacing: -0.3,
+          ),
+        ),
         const SizedBox(height: 12),
+        _buildTabBar(),
+        const SizedBox(height: 16),
         Obx(() {
           if (controller.isLoadingRecharges.value) {
             return Container(
@@ -362,25 +371,70 @@ class RechargeRequestsScreen extends GetView<RechargeController> {
     );
   }
 
-  Widget _buildFilterRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          'Transactions',
+  Widget _buildTabBar() {
+    return Obx(() {
+      final currentFilter = controller.selectedStatusFilter.value;
+      return Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildTabItem(
+                label: 'Pending',
+                isSelected: currentFilter == 'Pending',
+                onTap: () => controller.setStatusFilter('Pending'),
+              ),
+            ),
+            Expanded(
+              child: _buildTabItem(
+                label: 'Approved',
+                isSelected: currentFilter == 'Success',
+                onTap: () => controller.setStatusFilter('Success'),
+              ),
+            ),
+            Expanded(
+              child: _buildTabItem(
+                label: 'Rejected',
+                isSelected: currentFilter == 'Failed',
+                onTap: () => controller.setStatusFilter('Failed'),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildTabItem({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE91E63) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
+            color: isSelected ? Colors.white : Colors.grey.shade600,
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
           ),
         ),
-        Obx(() => FilterDropdown(
-              hint: 'Filter Status',
-              value: controller.selectedStatusFilter.value,
-              items: const ['All', 'Pending', 'Success', 'Failed'],
-              onChanged: (v) => controller.setStatusFilter(v),
-            )),
-      ],
+      ),
     );
   }
 

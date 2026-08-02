@@ -13,7 +13,7 @@ class RechargeController extends GetxController {
   final successfulRecharges = 0.obs;
   final failedRecharges = 0.obs;
 
-  final selectedStatusFilter = 'All'.obs;
+  final selectedStatusFilter = 'Pending'.obs;
 
   final GetConnect _connect = GetConnect();
   final String baseUrl = 'http://www.bloodlinkonline.xyz/api/v1';
