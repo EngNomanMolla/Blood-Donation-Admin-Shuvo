@@ -15,18 +15,24 @@ class RechargeRequestsScreen extends GetView<RechargeController> {
           children: [
             _buildHeader(context),
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildSummaryMetrics(),
-                    const SizedBox(height: 24),
-                    _buildListSection(),
-                    const SizedBox(height: 24),
-                  ],
+              child: RefreshIndicator(
+                color: const Color(0xFFE91E63),
+                onRefresh: () => controller.fetchRecharges(1),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildSummaryMetrics(),
+                      const SizedBox(height: 24),
+                      _buildListSection(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
             ),

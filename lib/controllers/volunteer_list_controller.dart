@@ -1,35 +1,14 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/volunteer_model.dart';
 import '../models/volunteer_request.dart';
 
 class VolunteerListController extends GetxController {
   final GetConnect _connect = GetConnect();
   final String baseUrl = 'http://www.bloodlinkonline.xyz/api/v1';
 
-  // Filter state
-  final selectedDivision = Rxn<String>();
-  final selectedDistrict = Rxn<String>();
-  final selectedUpazila = Rxn<String>();
-
-  // Dynamic filter lists from API initialized with default fallbacks
-  final divisions = <String>[
-    'Dhaka',
-    'Chattogram',
-    'Rajshahi',
-    'Khulna',
-    'Barishal',
-    'Sylhet',
-    'Rangpur',
-    'Mymensingh'
-  ].obs;
-  
-  final districts = <String>['Dhaka', 'Gazipur', 'Narayanganj'].obs;
-  final upazilas = <String>['Dhanmondi', 'Mirpur', 'Gulshan'].obs;
-
   final searchQuery = ''.obs;
+  final selectedStatusFilter = 'Volunteers'.obs;
 
   // Pagination & requests data
   final requests = <VolunteerRequest>[].obs;
@@ -37,172 +16,19 @@ class VolunteerListController extends GetxController {
   final currentPage = 1.obs;
   final totalPages = 1.obs;
 
-  // Cache variables for locations
-  List<Map<String, dynamic>> _rawDivisions = [];
-  List<Map<String, dynamic>> _rawDistricts = [];
-  List<Map<String, dynamic>> _rawUpazilas = [];
-
   @override
   void onInit() {
     super.onInit();
-    // Preload all location lists on start
-    fetchDivisions();
-    fetchDistrictsData();
-    fetchUpazilasData();
-    
     fetchVolunteerRequests(1);
   }
 
-  // Filtered computed lists for View
-  List<VolunteerRequest> get pendingRequests {
-    return requests.where((r) => r.status.toLowerCase() == 'pending').toList();
+  void setStatusFilter(String filter) {
+    selectedStatusFilter.value = filter;
+    fetchVolunteerRequests(1);
   }
-
-  List<VolunteerRequest> get suspendedRequests {
-    return requests.where((r) => r.status.toLowerCase() == 'suspended').toList();
-  }
-
-  List<VolunteerModel> get volunteers {
-    return requests
-        .where((r) => r.status.toLowerCase() == 'accepted')
-        .map((r) => VolunteerModel(
-              name: r.userName ?? 'Unknown User',
-              age: r.userAge != null ? '${r.userAge} Years' : 'Age N/A',
-              gender: r.userGender ?? 'Unknown',
-              location: r.userLocation ?? 'Bangladesh',
-              bloodGroup: r.userBloodGroup ?? 'N/A',
-              isActive: true,
-            ))
-        .toList();
-  }
-
-  int get newCount => pendingRequests.length;
 
   void onChangeSearch(String query) {
     searchQuery.value = query;
-    fetchVolunteerRequests(1);
-  }
-
-  // ── Location Fetching ──────────────────────────────────────────────────────
-
-  Future<void> fetchDivisions() async {
-    try {
-      final response = await _connect.get('https://raw.githubusercontent.com/ifahimreza/bangladesh-geojson/master/src/data/bd-divisions.json');
-      if (response.status.isOk && response.body != null) {
-        dynamic decoded;
-        if (response.body is String) {
-          decoded = jsonDecode(response.body);
-        } else {
-          decoded = response.body;
-        }
-
-        final Map<String, dynamic> data = decoded is Map ? Map<String, dynamic>.from(decoded) : {};
-        if (data['divisions'] is List) {
-          _rawDivisions = List<Map<String, dynamic>>.from(data['divisions'].map((e) => Map<String, dynamic>.from(e)));
-          divisions.value = _rawDivisions.map((e) => e['name']?.toString() ?? '').where((e) => e.isNotEmpty).toList();
-        }
-      }
-    } catch (e) {
-      // Keep fallbacks
-    }
-  }
-
-  Future<void> fetchDistrictsData() async {
-    try {
-      final response = await _connect.get('https://raw.githubusercontent.com/ifahimreza/bangladesh-geojson/master/src/data/bd-districts.json');
-      if (response.status.isOk && response.body != null) {
-        dynamic decoded;
-        if (response.body is String) {
-          decoded = jsonDecode(response.body);
-        } else {
-          decoded = response.body;
-        }
-
-        final Map<String, dynamic> data = decoded is Map ? Map<String, dynamic>.from(decoded) : {};
-        if (data['districts'] is List) {
-          _rawDistricts = List<Map<String, dynamic>>.from(data['districts'].map((e) => Map<String, dynamic>.from(e)));
-        }
-      }
-    } catch (e) {
-      // Keep fallbacks
-    }
-  }
-
-  Future<void> fetchUpazilasData() async {
-    try {
-      final response = await _connect.get('https://raw.githubusercontent.com/ifahimreza/bangladesh-geojson/master/src/data/bd-upazilas.json');
-      if (response.status.isOk && response.body != null) {
-        dynamic decoded;
-        if (response.body is String) {
-          decoded = jsonDecode(response.body);
-        } else {
-          decoded = response.body;
-        }
-
-        final Map<String, dynamic> data = decoded is Map ? Map<String, dynamic>.from(decoded) : {};
-        if (data['upazilas'] is List) {
-          _rawUpazilas = List<Map<String, dynamic>>.from(data['upazilas'].map((e) => Map<String, dynamic>.from(e)));
-        }
-      }
-    } catch (e) {
-      // Keep fallbacks
-    }
-  }
-
-  void selectDivision(String? v) {
-    selectedDivision.value = v;
-    selectedDistrict.value = null;
-    selectedUpazila.value = null;
-    districts.clear();
-    upazilas.clear();
-    
-    if (v != null && _rawDivisions.isNotEmpty) {
-      final divObj = _rawDivisions.firstWhere(
-        (d) => d['name']?.toString().toLowerCase() == v.toLowerCase(),
-        orElse: () => {},
-      );
-      final String? divId = divObj['id']?.toString();
-      if (divId != null) {
-        districts.value = _rawDistricts
-            .where((d) => d['division_id']?.toString() == divId)
-            .map((d) => d['name']?.toString() ?? '')
-            .where((d) => d.isNotEmpty)
-            .toList();
-      }
-    } else if (v != null) {
-      // Fallback districts if API failed
-      districts.value = ['Dhaka', 'Gazipur', 'Narayanganj'];
-    }
-    fetchVolunteerRequests(1);
-  }
-
-  void selectDistrict(String? v) {
-    selectedDistrict.value = v;
-    selectedUpazila.value = null;
-    upazilas.clear();
-    
-    if (v != null && _rawDistricts.isNotEmpty) {
-      final distObj = _rawDistricts.firstWhere(
-        (d) => d['name']?.toString().toLowerCase() == v.toLowerCase(),
-        orElse: () => {},
-      );
-      final String? distId = distObj['id']?.toString();
-      if (distId != null) {
-        upazilas.value = _rawUpazilas
-            .where((u) => u['district_id']?.toString() == distId)
-            .map((u) => u['name']?.toString() ?? '')
-            .where((u) => u.isNotEmpty)
-            .toList();
-      }
-    } else if (v != null) {
-      // Fallback upazilas if API failed
-      upazilas.value = ['Dhanmondi', 'Mirpur', 'Gulshan'];
-    }
-    fetchVolunteerRequests(1);
-  }
-
-  void selectUpazila(String? v) {
-    selectedUpazila.value = v;
     fetchVolunteerRequests(1);
   }
 
@@ -212,21 +38,21 @@ class VolunteerListController extends GetxController {
     isLoadingRequests.value = true;
     currentPage.value = page;
 
+    final filter = selectedStatusFilter.value;
+    String status = 'accepted';
+    if (filter == 'Requests') {
+      status = 'pending';
+    } else if (filter == 'Rejected') {
+      status = 'suspended';
+    }
+
     final Map<String, String> queryParams = {
       'page': page.toString(),
+      'status': status,
     };
 
     if (searchQuery.value.isNotEmpty) {
       queryParams['search'] = searchQuery.value;
-    }
-    if (selectedDivision.value != null) {
-      queryParams['division'] = selectedDivision.value!;
-    }
-    if (selectedDistrict.value != null) {
-      queryParams['district'] = selectedDistrict.value!;
-    }
-    if (selectedUpazila.value != null) {
-      queryParams['upazila'] = selectedUpazila.value!;
     }
 
     try {
@@ -261,6 +87,7 @@ class VolunteerListController extends GetxController {
         // Parse meta pagination
         final meta = responseData['meta'] as Map<String, dynamic>?;
         if (meta != null) {
+          currentPage.value = meta['current_page'] as int? ?? page;
           totalPages.value = meta['last_page'] as int? ?? 1;
         } else {
           totalPages.value = 1;

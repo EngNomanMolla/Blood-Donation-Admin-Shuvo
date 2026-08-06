@@ -12,6 +12,14 @@ class VolunteerRequest {
   final int? userAge;
   final String? userBloodGroup;
   final String? userLocation;
+  
+  // Payment info
+  final double? amount;
+  final String? method;
+  final String? transactionId;
+  final String? senderNumber;
+  final String? paymentStatus;
+  final String? adminNote;
 
   // Compatibility getter aliases for older widget structures
   String get name => userName ?? 'Unknown User';
@@ -31,25 +39,33 @@ class VolunteerRequest {
     this.userAge,
     this.userBloodGroup,
     this.userLocation,
+    this.amount,
+    this.method,
+    this.transactionId,
+    this.senderNumber,
+    this.paymentStatus,
+    this.adminNote,
   });
 
   factory VolunteerRequest.fromJson(Map<String, dynamic> json) {
     final userJson = json['user'] as Map<String, dynamic>?;
     final locationJson = userJson?['location'] as Map<String, dynamic>?;
     
-    // Fallback location formatting
-    String? locationDisplay = locationJson?['display'] as String? ?? locationJson?['full'] as String?;
-    if (locationDisplay == null) {
-      final div = locationJson?['division']?.toString();
-      final dist = locationJson?['district']?.toString();
-      final upa = locationJson?['upazila']?.toString();
-      if (div != null && dist != null && upa != null) {
-        locationDisplay = '$upa, $dist, $div';
-      } else if (div != null && dist != null) {
-        locationDisplay = '$dist, $div';
-      } else {
-        locationDisplay = div ?? userJson?['address']?.toString() ?? 'Bangladesh';
-      }
+    final div = locationJson?['division']?.toString() ?? userJson?['division']?.toString();
+    final dist = locationJson?['district']?.toString() ?? userJson?['district']?.toString();
+    final upa = locationJson?['upazila']?.toString() ?? userJson?['upazila']?.toString();
+    
+    final List<String> parts = [];
+    if (upa != null && upa.isNotEmpty && upa.toLowerCase() != 'null') parts.add(upa);
+    if (dist != null && dist.isNotEmpty && dist.toLowerCase() != 'null') parts.add(dist);
+    if (div != null && div.isNotEmpty && div.toLowerCase() != 'null') parts.add(div);
+    
+    String locationDisplay = parts.join(', ');
+    if (locationDisplay.isEmpty) {
+      locationDisplay = locationJson?['display'] as String? ?? 
+                        locationJson?['full'] as String? ?? 
+                        userJson?['address'] as String? ?? 
+                        'Bangladesh';
     }
 
     return VolunteerRequest(
@@ -68,6 +84,12 @@ class VolunteerRequest {
           : int.tryParse(userJson?['age']?.toString() ?? ''),
       userBloodGroup: userJson?['blood_group'] as String? ?? 'N/A',
       userLocation: locationDisplay,
+      amount: (json['amount'] as num?)?.toDouble(),
+      method: json['method'] as String?,
+      transactionId: json['transaction_id'] as String?,
+      senderNumber: json['sender_number'] as String?,
+      paymentStatus: json['payment_status'] as String?,
+      adminNote: json['admin_note'] as String?,
     );
   }
 }
