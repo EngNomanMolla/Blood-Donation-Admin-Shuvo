@@ -58,11 +58,16 @@ class VolunteerRequestCard extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 22,
                       backgroundColor: const Color(0xFFFFF0F3),
-                      child: Icon(
-                        Icons.person_rounded,
-                        color: const Color(0xFFE91E63).withValues(alpha: 0.7),
-                        size: 26,
-                      ),
+                      backgroundImage: (request.userAvatar != null && request.userAvatar!.isNotEmpty)
+                          ? NetworkImage(request.userAvatar!)
+                          : null,
+                      child: (request.userAvatar != null && request.userAvatar!.isNotEmpty)
+                          ? null
+                          : Icon(
+                              Icons.person_rounded,
+                              color: const Color(0xFFE91E63).withValues(alpha: 0.7),
+                              size: 26,
+                            ),
                     ),
                   ),
                 ),
@@ -88,7 +93,7 @@ class VolunteerRequestCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (request.userBloodGroup != null && request.userBloodGroup != 'N/A')
+                          if (request.userBloodGroup != null && request.userBloodGroup != 'N/A' && request.userBloodGroup != '-')
                             Transform.scale(
                               scale: 0.85,
                               child: BloodGroupBadge(group: request.userBloodGroup!),
@@ -122,8 +127,8 @@ class VolunteerRequestCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    request.userLocation ?? 'Bangladesh',
-                    maxLines: 2,
+                    request.userLocation ?? '-',
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 12.5,
@@ -268,11 +273,16 @@ class VolunteerRequestCard extends StatelessWidget {
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: const Color(0xFFFDF2F4),
-                      child: Icon(
-                        Icons.person_rounded,
-                        color: const Color(0xFFE91E63).withValues(alpha: 0.6),
-                        size: 34,
-                      ),
+                      backgroundImage: (request.userAvatar != null && request.userAvatar!.isNotEmpty)
+                          ? NetworkImage(request.userAvatar!)
+                          : null,
+                      child: (request.userAvatar != null && request.userAvatar!.isNotEmpty)
+                          ? null
+                          : Icon(
+                              Icons.person_rounded,
+                              color: const Color(0xFFE91E63).withValues(alpha: 0.6),
+                              size: 34,
+                            ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -298,7 +308,7 @@ class VolunteerRequestCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (request.userBloodGroup != null && request.userBloodGroup != 'N/A')
+                    if (request.userBloodGroup != null && request.userBloodGroup != 'N/A' && request.userBloodGroup != '-')
                       BloodGroupBadge(group: request.userBloodGroup!),
                   ],
                 ),
@@ -315,11 +325,11 @@ class VolunteerRequestCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.email_outlined, 'Email', request.userEmail ?? 'No Email'),
-                _buildInfoRow(Icons.phone_android_rounded, 'Phone', request.userPhone ?? 'No Phone', copyable: request.userPhone != null),
-                _buildInfoRow(Icons.location_on_outlined, 'Location', request.userLocation ?? 'Bangladesh'),
-                _buildInfoRow(Icons.cake_outlined, 'Age', request.userAge != null ? '${request.userAge} Years' : 'Age N/A'),
-                _buildInfoRow(Icons.face_unlock_rounded, 'Gender', request.userGender ?? 'Unknown'),
+                _buildInfoRow(Icons.email_outlined, 'Email', request.userEmail ?? '-'),
+                _buildInfoRow(Icons.phone_android_rounded, 'Phone', request.userPhone ?? '-', copyable: request.userPhone != null && request.userPhone != '-'),
+                _buildInfoRow(Icons.location_on_outlined, 'Location', request.userLocation ?? '-'),
+                _buildInfoRow(Icons.cake_outlined, 'Date of Birth', request.dateOfBirth ?? '-'),
+                _buildInfoRow(Icons.face_unlock_rounded, 'Gender', request.userGender ?? '-'),
 
                 if (request.message != null && request.message!.isNotEmpty) ...[
                   const Divider(height: 32),
@@ -420,7 +430,7 @@ class VolunteerRequestCard extends StatelessWidget {
                           ),
                         ),
                         child: const Text(
-                          'Accept Application',
+                          'Accept',
                           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                         ),
                       ),
@@ -442,7 +452,7 @@ class VolunteerRequestCard extends StatelessWidget {
                           ),
                         ),
                         child: const Text(
-                          'Suspend / Reject',
+                          'Reject',
                           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                         ),
                       ),

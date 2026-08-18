@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/user_details_controller.dart';
-import '../../models/recharge_model.dart';
 import '../widgets/blood_group_badge.dart';
 
 class UserDetailsScreen extends GetView<UserDetailsController> {
@@ -26,8 +25,6 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
                       _buildProfileCard(user),
                       const SizedBox(height: 20),
                       _buildInfoSection(user),
-                      const SizedBox(height: 20),
-                      _buildRechargeHistory(),
                       const SizedBox(height: 20),
                       _buildBlockButton(user),
                       const SizedBox(height: 30),
@@ -115,14 +112,22 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
                 color: const Color(0xFFE91E63).withValues(alpha: 0.15),
                 width: 2.5,
               ),
+              image: (user.avatarAsset != null && user.avatarAsset!.isNotEmpty)
+                  ? DecorationImage(
+                      image: NetworkImage(user.avatarAsset!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
             ),
-            child: Center(
-              child: Icon(
-                Icons.person_rounded,
-                size: 32,
-                color: const Color(0xFFE91E63).withValues(alpha: 0.5),
-              ),
-            ),
+            child: (user.avatarAsset != null && user.avatarAsset!.isNotEmpty)
+                ? null
+                : Center(
+                    child: Icon(
+                      Icons.person_rounded,
+                      size: 32,
+                      color: const Color(0xFFE91E63).withValues(alpha: 0.5),
+                    ),
+                  ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -210,6 +215,7 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
@@ -220,7 +226,8 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
             child: Icon(icon, color: const Color(0xFFE91E63), size: 18),
           ),
           const SizedBox(width: 16),
-          Expanded(
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
             child: Text(
               label,
               style: TextStyle(
@@ -230,12 +237,19 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
               ),
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: valueColor ?? const Color(0xFF1A1A2E),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: valueColor ?? const Color(0xFF1A1A2E),
+                ),
+              ),
             ),
           ),
         ],
@@ -250,182 +264,51 @@ class UserDetailsScreen extends GetView<UserDetailsController> {
     );
   }
 
-  // ── Recharge History ────────────────────────────────────────────────────────
 
-  Widget _buildRechargeHistory() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Recharge History',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A2E),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Obx(() => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE91E63).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${controller.rechargeHistory.length}',
-                      style: const TextStyle(
-                        color: Color(0xFFE91E63),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  )),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Obx(() => ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: controller.rechargeHistory.length,
-                separatorBuilder: (_, __) => Divider(
-                  color: Colors.grey.shade100,
-                  height: 1,
-                ),
-                itemBuilder: (context, index) {
-                  return _rechargeCard(controller.rechargeHistory[index]);
-                },
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _rechargeCard(RechargeModel recharge) {
-    Color statusColor;
-    IconData statusIcon;
-    switch (recharge.status) {
-      case 'success':
-        statusColor = Colors.green;
-        statusIcon = Icons.check_circle_rounded;
-        break;
-      case 'pending':
-        statusColor = Colors.orange;
-        statusIcon = Icons.access_time_rounded;
-        break;
-      default:
-        statusColor = Colors.red;
-        statusIcon = Icons.cancel_rounded;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(statusIcon, color: statusColor, size: 20),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recharge.method,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${recharge.date} · ${recharge.time}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                recharge.amount,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A2E),
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                recharge.status[0].toUpperCase() + recharge.status.substring(1),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: statusColor,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   // ── Block / Unblock Button ──────────────────────────────────────────────────
 
   Widget _buildBlockButton(user) {
-    final isBlocked = user.isBlocked as bool;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () => controller.toggleBlock(),
-        icon: Icon(
-          isBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-          size: 20,
-        ),
-        label: Text(
-          isBlocked ? 'Unblock User' : 'Block User',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+    return Obx(() {
+      final isBlocked = controller.user.value.isBlocked;
+      final loading = controller.isLoading.value;
+      return SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: loading ? null : () => controller.toggleBlock(),
+          icon: loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Icon(
+                  isBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
+                  size: 20,
+                ),
+          label: Text(
+            loading
+                ? 'Updating...'
+                : (isBlocked ? 'Unblock User' : 'Block User'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isBlocked ? Colors.green : Colors.red,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isBlocked ? Colors.green : Colors.red,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-      ),
-    );
+      );
+    });
   }
 }

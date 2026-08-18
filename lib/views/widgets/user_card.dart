@@ -60,14 +60,22 @@ class UserCard extends StatelessWidget {
                             color: const Color(0xFFE91E63).withValues(alpha: 0.1),
                             width: 3,
                           ),
+                          image: (user.avatarAsset != null && user.avatarAsset!.isNotEmpty)
+                              ? DecorationImage(
+                                  image: NetworkImage(user.avatarAsset!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        child: Center(
-                          child: Icon(
-                            Icons.person_rounded,
-                            size: 34,
-                            color: const Color(0xFFE91E63).withValues(alpha: 0.5),
-                          ),
-                        ),
+                        child: (user.avatarAsset != null && user.avatarAsset!.isNotEmpty)
+                            ? null
+                            : Center(
+                                child: Icon(
+                                  Icons.person_rounded,
+                                  size: 34,
+                                  color: const Color(0xFFE91E63).withValues(alpha: 0.5),
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 16),
                       // Info
@@ -98,12 +106,16 @@ class UserCard extends StatelessWidget {
                                   children: [
                                     Icon(Icons.location_on_rounded, size: 12, color: Colors.grey[400]),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      user.location,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[500],
-                                        fontWeight: FontWeight.w500,
+                                    Expanded(
+                                      child: Text(
+                                        user.location,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[500],
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -128,7 +140,12 @@ class UserCard extends StatelessWidget {
                         ),
                       ),
                       // Blood Group Badge (Vertical alignment centered with text)
-                      BloodGroupBadge(group: user.bloodGroup),
+                      if (user.bloodGroup != '-')
+                        Transform.scale(
+                          scale: 0.82,
+                          alignment: Alignment.centerRight,
+                          child: BloodGroupBadge(group: user.bloodGroup),
+                        ),
                     ],
                   ),
                 ],

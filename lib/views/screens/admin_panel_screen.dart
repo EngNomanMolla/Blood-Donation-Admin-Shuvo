@@ -4,7 +4,6 @@ import '../../controllers/admin_controller.dart';
 import '../../controllers/recharge_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../widgets/dashboard_menu_card.dart';
-import '../widgets/volunteer_request_card.dart';
 import '../../routes/app_pages.dart';
 
 class AdminPanelScreen extends GetView<AdminController> {
@@ -26,8 +25,6 @@ class AdminPanelScreen extends GetView<AdminController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    _buildMetricsRow(),
-                    const SizedBox(height: 24),
                     const Text(
                       'Management Grid',
                       style: TextStyle(
@@ -39,10 +36,6 @@ class AdminPanelScreen extends GetView<AdminController> {
                     ),
                     const SizedBox(height: 12),
                     _buildMenuGrid(context),
-                    const SizedBox(height: 28),
-                    _buildVolunteerSection(),
-                    const SizedBox(height: 28),
-                    _buildActivityFeed(),
                     const SizedBox(height: 28),
                   ],
                 ),
@@ -130,95 +123,6 @@ class AdminPanelScreen extends GetView<AdminController> {
                 color: Color(0xFFE91E63),
                 size: 17,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Glassmorphic Metrics Row ───────────────────────────────────────────────
-
-  Widget _buildMetricsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildMetricItem(
-            label: 'Users',
-            value: '1,248',
-            bgColor: const Color(0xFFE0F2FE),
-            textColor: const Color(0xFF0369A1),
-            icon: Icons.group_rounded,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildMetricItem(
-            label: 'Donors',
-            value: '482',
-            bgColor: const Color(0xFFFCE7F3),
-            textColor: const Color(0xFFBE185D),
-            icon: Icons.favorite_rounded,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildMetricItem(
-            label: 'Funds',
-            value: '৳8,500',
-            bgColor: const Color(0xFFDCFCE7),
-            textColor: const Color(0xFF15803D),
-            icon: Icons.payments_rounded,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMetricItem({
-    required String label,
-    required String value,
-    required Color bgColor,
-    required Color textColor,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: textColor.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: textColor.withValues(alpha: 0.6), size: 16),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: textColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: textColor.withValues(alpha: 0.85),
             ),
           ),
         ],
@@ -330,186 +234,6 @@ class AdminPanelScreen extends GetView<AdminController> {
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  // ── Volunteer Section ─────────────────────────────────────────────────────
-
-  Widget _buildVolunteerSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Volunteer Requests',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A1A2E),
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Obx(() {
-              final count = controller.newCount;
-              if (count > 0) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE91E63).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '($count New)',
-                    style: const TextStyle(
-                      color: Color(0xFFE91E63),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            }),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Obx(() {
-          if (controller.requests.isEmpty) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Center(
-                child: Text(
-                  'No volunteer requests found',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ),
-            );
-          }
-
-          return ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: controller.requests.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              return VolunteerRequestCard(
-                request: controller.requests[index],
-                onAccept: () => controller.accept(index),
-                onSuspend: () => controller.suspend(index),
-              );
-            },
-          );
-        }),
-      ],
-    );
-  }
-
-  // ── Recent Activity Timeline Feed ─────────────────────────────────────────
-
-  Widget _buildActivityFeed() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'System Activity Log',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF1A1A2E),
-            letterSpacing: -0.3,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              _buildActivityItem(
-                message: 'Recharge Request approved for User SzGSt (৳50)',
-                time: '10m ago',
-                icon: Icons.check_circle_outline_rounded,
-                color: const Color(0xFF10B981),
-              ),
-              const Divider(height: 20, color: Color(0xFFF1F3F5)),
-              _buildActivityItem(
-                message: 'New Volunteer request received from Emili Dash',
-                time: '1h ago',
-                icon: Icons.person_add_alt_1_rounded,
-                color: const Color(0xFFF59E0B),
-              ),
-              const Divider(height: 20, color: Color(0xFFF1F3F5)),
-              _buildActivityItem(
-                message: 'Global push notification broadcasted successfully',
-                time: 'Yesterday',
-                icon: Icons.campaign_rounded,
-                color: const Color(0xFF0EA5E9),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem({
-    required String message,
-    required String time,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 16),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                message,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A1A2E),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                time,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade400,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );

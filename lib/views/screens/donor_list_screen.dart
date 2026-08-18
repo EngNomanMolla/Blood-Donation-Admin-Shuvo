@@ -168,6 +168,7 @@ class DonorListScreen extends GetView<DonorListController> {
                 value: controller.selectedDistrict.value,
                 items: controller.districts,
                 onChanged: controller.selectDistrict,
+                isDisabled: controller.selectedDivision.value?.isEmpty ?? true,
               ),
               const SizedBox(width: 8),
               FilterDropdown(
@@ -175,6 +176,7 @@ class DonorListScreen extends GetView<DonorListController> {
                 value: controller.selectedUpazila.value,
                 items: controller.upazilas,
                 onChanged: controller.selectUpazila,
+                isDisabled: controller.selectedDistrict.value?.isEmpty ?? true,
               ),
             ],
           )),

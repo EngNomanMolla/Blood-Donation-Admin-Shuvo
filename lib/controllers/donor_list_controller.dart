@@ -33,6 +33,7 @@ class DonorListController extends GetxController {
 
   final allDonors = [
     UserModel(
+      id: 1,
       name: 'Emili Dash',
       age: '24 Years',
       gender: 'Female',
@@ -42,6 +43,7 @@ class DonorListController extends GetxController {
       isActive: true,
     ),
     UserModel(
+      id: 2,
       name: 'Rujayen Ahnaf',
       age: '24 Years',
       gender: 'Female',
@@ -51,6 +53,7 @@ class DonorListController extends GetxController {
       isActive: true,
     ),
     UserModel(
+      id: 3,
       name: 'Rufayed Ahnaf',
       age: '24 Years',
       gender: 'Female',
@@ -60,6 +63,7 @@ class DonorListController extends GetxController {
       isActive: true,
     ),
     UserModel(
+      id: 4,
       name: 'Emili Dash',
       age: '24 Years',
       gender: 'Female',

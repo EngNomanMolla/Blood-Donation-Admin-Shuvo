@@ -9,7 +9,6 @@ import 'utils/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Retrieve persistent session state
   final prefs = await SharedPreferences.getInstance();
   final String? token = prefs.getString('admin_token');
   
@@ -30,12 +29,10 @@ void main() async {
     }
   }
 
-  // Set initial route based on session presence and connectivity
   final String initialRoute;
   if (token != null && isConnected) {
     initialRoute = Routes.ADMIN_PANEL;
   } else {
-    // If previously logged in but offline, clear the token and force login
     if (token != null && !isConnected) {
       await prefs.remove('admin_token');
     }

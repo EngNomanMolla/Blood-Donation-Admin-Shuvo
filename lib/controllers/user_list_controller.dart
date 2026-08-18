@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class UserListController extends GetxController {
   final GetConnect _connect = GetConnect();
+  final String baseUrl = 'http://www.bloodlinkonline.xyz/api/v1';
 
   final selectedDivision = Rxn<String>();
   final selectedDistrict = Rxn<String>();
   final selectedUpazila = Rxn<String>();
 
-  // Dynamic filter lists from API initialized with default fallbacks
+  // Dynamic filter lists from geojson initialized with default fallbacks
   final divisions = <String>[
     'Dhaka',
     'Chattogram',
@@ -31,65 +33,95 @@ class UserListController extends GetxController {
   List<Map<String, dynamic>> _rawDistricts = [];
   List<Map<String, dynamic>> _rawUpazilas = [];
 
-  final allUsers = [
-    UserModel(
-      name: 'Emili Dash',
-      age: '24 Years',
-      gender: 'Female',
-      location: 'Dhaka, Bangladesh',
-      bloodGroup: 'B+',
-      phone: '+880 1234 567890',
-      isActive: true,
-    ),
-    UserModel(
-      name: 'Rujayen Ahnaf',
-      age: '24 Years',
-      gender: 'Female',
-      location: 'Dhaka, Bangladesh',
-      bloodGroup: 'B+',
-      phone: '+880 1234 567891',
-      isActive: true,
-    ),
-    UserModel(
-      name: 'Rufayed Ahnaf',
-      age: '24 Years',
-      gender: 'Female',
-      location: 'Dhaka, Bangladesh',
-      bloodGroup: 'B+',
-      phone: '+880 1234 567892',
-      isActive: true,
-    ),
-    UserModel(
-      name: 'Emili Dash',
-      age: '24 Years',
-      gender: 'Female',
-      location: 'Dhaka, Bangladesh',
-      bloodGroup: 'B+',
-      phone: '+880 1234 567893',
-      isActive: true,
-    ),
-  ];
+  // Dynamic users data from API
+  final users = <UserModel>[].obs;
+  final isLoading = false.obs;
+  final currentPage = 1.obs;
+  final totalPages = 1.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Preload location data
+    // Preload location geojson data
     fetchDivisions();
     fetchDistrictsData();
     fetchUpazilasData();
+    // Initial fetch of users
+    fetchUsers(1);
   }
 
-  List<UserModel> get users {
-    if (searchQuery.value.isEmpty) return allUsers;
-    return allUsers.where((user) {
-      final query = searchQuery.value.toLowerCase();
-      return user.name.toLowerCase().contains(query) ||
-             user.phone.toLowerCase().contains(query) ||
-             user.bloodGroup.toLowerCase().contains(query);
-    }).toList();
+  // ── Fetch Users from Backend API ───────────────────────────────────────────
+
+  Future<void> fetchUsers(int page) async {
+    isLoading.value = true;
+    currentPage.value = page;
+
+    final Map<String, String> queryParams = {
+      'page': page.toString(),
+      'per_page': '15',
+    };
+
+    if (searchQuery.value.isNotEmpty) {
+      queryParams['search'] = searchQuery.value;
+    }
+    if (selectedDivision.value != null && selectedDivision.value!.isNotEmpty) {
+      queryParams['division'] = selectedDivision.value!;
+    }
+    if (selectedDistrict.value != null && selectedDistrict.value!.isNotEmpty) {
+      queryParams['district'] = selectedDistrict.value!;
+    }
+    if (selectedUpazila.value != null && selectedUpazila.value!.isNotEmpty) {
+      queryParams['upazila'] = selectedUpazila.value!;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('admin_token');
+
+      final response = await _connect.get(
+        '$baseUrl/admin/users',
+        query: queryParams,
+        headers: {
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.status.isOk && response.body != null) {
+        final Map<String, dynamic> responseData = response.body as Map<String, dynamic>;
+        List? listData;
+        if (responseData['data'] is List) {
+          listData = responseData['data'] as List;
+        }
+
+        if (listData != null) {
+          users.value = listData
+              .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+              .toList();
+        } else {
+          users.clear();
+        }
+
+        // Parse meta pagination
+        final meta = responseData['meta'] as Map<String, dynamic>?;
+        if (meta != null) {
+          currentPage.value = meta['current_page'] as int? ?? page;
+          totalPages.value = meta['last_page'] as int? ?? 1;
+        } else {
+          totalPages.value = 1;
+        }
+      }
+    } catch (e) {
+      // Keep existing values or empty
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void onChangeSearch(String query) => searchQuery.value = query;
+  void onChangeSearch(String query) {
+    searchQuery.value = query;
+    fetchUsers(1);
+  }
 
   // ── Location Fetching ──────────────────────────────────────────────────────
 
@@ -180,6 +212,7 @@ class UserListController extends GetxController {
     } else if (v != null) {
       districts.value = ['Dhaka', 'Gazipur', 'Narayanganj'];
     }
+    fetchUsers(1);
   }
 
   void selectDistrict(String? v) {
@@ -203,7 +236,11 @@ class UserListController extends GetxController {
     } else if (v != null) {
       upazilas.value = ['Dhanmondi', 'Mirpur', 'Gulshan'];
     }
+    fetchUsers(1);
   }
 
-  void selectUpazila(String? v) => selectedUpazila.value = v;
+  void selectUpazila(String? v) {
+    selectedUpazila.value = v;
+    fetchUsers(1);
+  }
 }

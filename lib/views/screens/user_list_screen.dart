@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/user_list_controller.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/user_card.dart';
+import '../widgets/user_card_shimmer.dart';
 
 class UserListScreen extends GetView<UserListController> {
   const UserListScreen({super.key});
@@ -23,8 +24,6 @@ class UserListScreen extends GetView<UserListController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    _buildSearchBar(),
-                    const SizedBox(height: 16),
                     _buildFilterRow(),
                     const SizedBox(height: 24),
                     _buildUserListSection(),
@@ -109,44 +108,6 @@ class UserListScreen extends GetView<UserListController> {
     );
   }
 
-  // ── Search Bar ─────────────────────────────────────────────────────────────
-
-  Widget _buildSearchBar() {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: TextField(
-          onChanged: controller.onChangeSearch,
-          decoration: InputDecoration(
-            hintText: 'Search by name, phone...',
-            hintStyle: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 14,
-            ),
-            border: InputBorder.none,
-            isDense: true,
-            icon: Icon(
-              Icons.search,
-              color: Colors.grey.shade500,
-              size: 20,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   // ── Filter Row ─────────────────────────────────────────────────────────────
 
@@ -168,6 +129,7 @@ class UserListScreen extends GetView<UserListController> {
                 value: controller.selectedDistrict.value,
                 items: controller.districts,
                 onChanged: controller.selectDistrict,
+                isDisabled: controller.selectedDivision.value?.isEmpty ?? true,
               ),
               const SizedBox(width: 8),
               FilterDropdown(
@@ -175,6 +137,7 @@ class UserListScreen extends GetView<UserListController> {
                 value: controller.selectedUpazila.value,
                 items: controller.upazilas,
                 onChanged: controller.selectUpazila,
+                isDisabled: controller.selectedDistrict.value?.isEmpty ?? true,
               ),
             ],
           )),
@@ -220,19 +183,137 @@ class UserListScreen extends GetView<UserListController> {
           ),
         ),
         const SizedBox(height: 16),
-        Obx(() => ListView.separated(
+        Obx(() {
+          if (controller.isLoading.value) {
+            return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.users.length,
+              itemCount: 4,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return UserCard(
-                  user: controller.users[index],
-                  onTap: () => Get.toNamed('/user-details', arguments: controller.users[index]),
-                );
-              },
-            )),
+              itemBuilder: (context, index) => const UserCardShimmer(),
+            );
+          }
+          if (controller.users.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  'No users found.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            );
+          }
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.users.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return UserCard(
+                user: controller.users[index],
+                onTap: () => Get.toNamed('/user-details', arguments: controller.users[index]),
+              );
+            },
+          );
+        }),
+        const SizedBox(height: 20),
+        _buildPaginationControls(),
       ],
     );
+  }
+
+  Widget _buildPaginationControls() {
+    return Obx(() {
+      final current = controller.currentPage.value;
+      final total = controller.totalPages.value;
+
+      if (total <= 1) return const SizedBox.shrink();
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Prev Button
+          InkWell(
+            onTap: current > 1 ? () => controller.fetchUsers(current - 1) : null,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: current > 1 ? Colors.white : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: current > 1 ? Colors.grey.shade300 : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.chevron_left_rounded,
+                    color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Prev',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Page Indicator
+          Text(
+            'Page $current of $total',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1A2E),
+            ),
+          ),
+          // Next Button
+          InkWell(
+            onTap: current < total ? () => controller.fetchUsers(current + 1) : null,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: current < total ? Colors.white : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: current < total ? Colors.grey.shade300 : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Next',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
