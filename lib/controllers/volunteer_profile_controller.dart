@@ -1,51 +1,128 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/volunteer_profile_model.dart';
 import '../models/recharge_model.dart';
+import '../models/volunteer_request.dart';
 
 class VolunteerProfileController extends GetxController {
+  final GetConnect _connect = GetConnect();
+  final String baseUrl = 'http://www.bloodlinkonline.xyz/api/v1';
+
   final profile = Rx<VolunteerProfileModel>(
     const VolunteerProfileModel(
-      name: "Miraj Ahmed",
-      email: "mirajahmed3540@gmail.com",
-      phone: "+880 1234 567890",
-      bloodGroup: "A-",
-      level: "A",
-      totalRegistration: "1,250",
-      totalEarning: "1,500",
-      totalWithdraw: "1,000",
-      currentBalance: "500",
+      name: "Unknown",
+      email: "-",
+      phone: "-",
+      bloodGroup: "-",
+      level: "Volunteer",
+      totalRegistration: "0",
+      totalEarning: "৳0",
+      totalWithdraw: "৳0",
+      currentBalance: "৳0",
       isBlocked: false,
     ),
   );
 
-  final transactions = <RechargeModel>[
-    const RechargeModel(
-      id: 'TRX001',
-      amount: '৳500',
-      date: '12 Apr 2026',
-      time: '10:30 AM',
-      method: 'Cash Out',
-      status: 'success',
-    ),
-    const RechargeModel(
-      id: 'TRX002',
-      amount: '৳200',
-      date: '10 Apr 2026',
-      time: '02:15 PM',
-      method: 'Cash In',
-      status: 'success',
-    ),
-    const RechargeModel(
-      id: 'TRX003',
-      amount: '৳300',
-      date: '08 Apr 2026',
-      time: '11:45 AM',
-      method: 'Cash Out',
-      status: 'pending',
-    ),
-  ].obs;
+  final transactions = <RechargeModel>[].obs;
+  final isLoading = false.obs;
+  
+  // Store the actual request object
+  final volunteerReq = Rxn<VolunteerRequest>();
 
-  void toggleBlock() {
-    profile.value = profile.value.copyWith(isBlocked: !profile.value.isBlocked);
+  @override
+  void onInit() {
+    super.onInit();
+    if (Get.arguments is VolunteerRequest) {
+      final req = Get.arguments as VolunteerRequest;
+      volunteerReq.value = req;
+      
+      final balanceText = req.walletBalance != null ? '৳${req.walletBalance!.toInt()}' : '৳0';
+      final earningsText = req.volunteerEarnings != null ? '৳${req.volunteerEarnings!.toInt()}' : '৳0';
+      final withdrawText = req.volunteerWithdrawals != null ? '৳${req.volunteerWithdrawals!.toInt()}' : '৳0';
+      
+      profile.value = VolunteerProfileModel(
+        name: req.name,
+        email: req.userEmail ?? '-',
+        phone: req.userPhone ?? '-',
+        bloodGroup: req.userBloodGroup ?? '-',
+        level: req.isBlocked ? 'Blocked' : 'Volunteer',
+        totalRegistration: req.donationsCount.toString(),
+        totalEarning: earningsText,
+        totalWithdraw: withdrawText,
+        currentBalance: balanceText,
+        isBlocked: req.isBlocked,
+      );
+    }
+  }
+
+  Future<void> toggleBlock() async {
+    final req = volunteerReq.value;
+    if (req == null) return;
+
+    isLoading.value = true;
+    
+    // Determine target URL for block/unblock
+    final currentBlockedStatus = profile.value.isBlocked;
+    final actionPath = currentBlockedStatus ? 'unblock' : 'block';
+    
+    // Try to retrieve user id (since the id in approved list is user id!)
+    // Wait, let's see: req.id is the user id or request id depending on layout
+    final userId = req.id; 
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('admin_token');
+
+      // Try hitting volunteers block first, then fallback to users block
+      var response = await _connect.patch(
+        '$baseUrl/admin/volunteers/$userId/$actionPath',
+        {},
+        headers: {
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (!response.status.isOk) {
+        response = await _connect.patch(
+          '$baseUrl/admin/users/$userId/$actionPath',
+          {},
+          headers: {
+            'Accept': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        );
+      }
+
+      if (response.status.isOk) {
+        profile.value = profile.value.copyWith(isBlocked: !currentBlockedStatus);
+        Get.snackbar(
+          'Success',
+          'Volunteer has been ${currentBlockedStatus ? 'unblocked' : 'blocked'} successfully.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withValues(alpha: 0.1),
+          colorText: Colors.green,
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to update block status: ${response.statusText}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFFFFECEF),
+          colorText: const Color(0xFFEF4444),
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFFFECEF),
+        colorText: const Color(0xFFEF4444),
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

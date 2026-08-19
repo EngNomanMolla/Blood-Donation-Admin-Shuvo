@@ -29,10 +29,12 @@ void main() async {
     }
   }
 
+
   final String initialRoute;
   if (token != null && isConnected) {
     initialRoute = Routes.ADMIN_PANEL;
   } else {
+
     if (token != null && !isConnected) {
       await prefs.remove('admin_token');
     }

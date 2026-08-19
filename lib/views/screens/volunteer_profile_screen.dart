@@ -203,21 +203,23 @@ class VolunteerProfileScreen extends GetView<VolunteerProfileController> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: _actionBtn(
-                                      label: p.isBlocked ? 'Blocked' : 'Block',
-                                      isOutline: false,
-                                      onTap: controller.toggleBlock,
-                                      color: const Color(0xFFE91E63),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: _actionBtn(
-                                      label: 'Unblock',
-                                      isOutline: true,
-                                      onTap: controller.toggleBlock,
-                                      color: Colors.grey[400]!,
-                                    ),
+                                    child: Obx(() => controller.isLoading.value
+                                        ? const Center(
+                                            child: SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: CircularProgressIndicator(
+                                                color: Color(0xFFE91E63),
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          )
+                                        : _actionBtn(
+                                            label: p.isBlocked ? 'Unblock Volunteer' : 'Block Volunteer',
+                                            isOutline: false,
+                                            onTap: () => controller.toggleBlock(),
+                                            color: p.isBlocked ? Colors.green : const Color(0xFFE91E63),
+                                          )),
                                   ),
                                 ],
                               ),

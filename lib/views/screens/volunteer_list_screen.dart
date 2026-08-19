@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/volunteer_list_controller.dart';
-import '../../models/volunteer_model.dart';
 import '../widgets/volunteer_item_card.dart';
 import '../widgets/volunteer_request_card.dart';
 
@@ -218,14 +217,7 @@ class VolunteerListScreen extends GetView<VolunteerListController> {
               final item = controller.requests[index];
               if (currentFilter == 'Volunteers') {
                 return VolunteerItemCard(
-                  volunteer: VolunteerModel(
-                    name: item.userName ?? 'Unknown User',
-                    age: item.userAge != null ? '${item.userAge} Years' : 'Age N/A',
-                    gender: item.userGender ?? 'Unknown',
-                    location: item.userLocation ?? 'Bangladesh',
-                    bloodGroup: item.userBloodGroup ?? 'N/A',
-                    isActive: true,
-                  ),
+                  volunteer: item,
                 );
               } else {
                 return VolunteerRequestCard(

@@ -286,17 +286,13 @@ class AuthController extends GetxController {
       emailController.clear();
       passwordController.clear();
 
-      Get.snackbar(
-        'Logged Out',
-        'You have been logged out successfully.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue.withValues(alpha: 0.1),
-        colorText: Colors.blue,
-      );
+      isLoading.value = false;
 
       // Return to Login view
       Get.offAllNamed(Routes.LOGIN);
+      Get.delete<AuthController>();
     } catch (e) {
+      isLoading.value = false;
       Get.snackbar(
         'Error',
         ErrorHandler.getErrorMessage(e),
@@ -304,8 +300,6 @@ class AuthController extends GetxController {
         backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
-    } finally {
-      isLoading.value = false;
     }
   }
 }

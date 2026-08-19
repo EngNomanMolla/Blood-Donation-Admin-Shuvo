@@ -60,7 +60,7 @@ class VolunteerListController extends GetxController {
       final String? token = prefs.getString('admin_token');
 
       final response = await _connect.get(
-        '$baseUrl/admin/volunteer-requests',
+        '$baseUrl/admin/volunteers',
         query: queryParams,
         headers: {
           'Accept': 'application/json',
@@ -72,7 +72,9 @@ class VolunteerListController extends GetxController {
         final Map<String, dynamic> responseData = response.body as Map<String, dynamic>;
         
         List? listData;
-        if (responseData['data'] is List) {
+        if (status == 'pending' && responseData['active_requests'] is List) {
+          listData = responseData['active_requests'] as List;
+        } else if (responseData['data'] is List) {
           listData = responseData['data'] as List;
         }
 
@@ -122,6 +124,34 @@ class VolunteerListController extends GetxController {
       if (!response.status.isOk) {
         response = await _connect.patch(
           '$baseUrl/admin/volunteer-requests/$id',
+          {
+            'status': status,
+          },
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        );
+      }
+
+      if (!response.status.isOk) {
+        response = await _connect.patch(
+          '$baseUrl/admin/volunteers/$id/status',
+          {
+            'status': status,
+          },
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        );
+      }
+
+      if (!response.status.isOk) {
+        response = await _connect.patch(
+          '$baseUrl/admin/volunteers/$id',
           {
             'status': status,
           },

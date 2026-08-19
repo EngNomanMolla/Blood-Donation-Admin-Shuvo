@@ -22,6 +22,14 @@ class VolunteerRequest {
   final String? paymentStatus;
   final String? adminNote;
 
+  // Additional fields for Volunteer details mapping
+  final double? walletBalance;
+  final double? volunteerEarnings;
+  final double? volunteerWithdrawals;
+  final bool isBlocked;
+  final int donationsCount;
+  final int livesSavedCount;
+
   // Compatibility getter aliases for older widget structures
   String get name => userName ?? 'Unknown User';
   String get role => profession;
@@ -47,10 +55,24 @@ class VolunteerRequest {
     this.senderNumber,
     this.paymentStatus,
     this.adminNote,
+    this.walletBalance = 0.0,
+    this.volunteerEarnings = 0.0,
+    this.volunteerWithdrawals = 0.0,
+    this.isBlocked = false,
+    this.donationsCount = 0,
+    this.livesSavedCount = 0,
   });
 
   factory VolunteerRequest.fromJson(Map<String, dynamic> json) {
-    final userJson = json['user'] as Map<String, dynamic>?;
+    final hasUserKey = json.containsKey('user');
+    final Map<String, dynamic>? userJson = hasUserKey 
+        ? (json['user'] as Map<String, dynamic>?) 
+        : json;
+        
+    final Map<String, dynamic>? requestJson = hasUserKey 
+        ? json 
+        : (json['volunteer_request'] as Map<String, dynamic>?);
+
     final locationJson = userJson?['location'] as Map<String, dynamic>?;
     
     final div = locationJson?['division']?.toString() ?? userJson?['division']?.toString();
@@ -111,17 +133,25 @@ class VolunteerRequest {
     }
 
     // Profession fallback checking
-    String profVal = json['profession']?.toString() ?? '';
-    if (profVal.isEmpty || profVal.toLowerCase() == 'null') {
-      profVal = '-';
+    String profVal = requestJson?['profession']?.toString() ?? '';
+    if (profVal.isEmpty || profVal.toLowerCase() == 'null' || profVal == '-') {
+      final statusVal = requestJson?['status']?.toString() ?? 'pending';
+      profVal = (statusVal == 'accepted') ? 'Volunteer' : 'Volunteer Applicant';
     }
 
+    final isBlockedVal = userJson?['is_blocked'] as bool? ?? false;
+    final balanceVal = (userJson?['wallet_balance'] as num?)?.toDouble() ?? 0.0;
+    final earningsVal = (userJson?['volunteer_earnings'] as num?)?.toDouble() ?? 0.0;
+    final withdrawalsVal = (userJson?['volunteer_withdrawals'] as num?)?.toDouble() ?? 0.0;
+    final donationsVal = userJson?['donations_count'] as int? ?? 0;
+    final livesSavedVal = userJson?['lives_saved_count'] as int? ?? 0;
+
     return VolunteerRequest(
-      id: json['id'] as int? ?? 0,
+      id: requestJson?['id'] as int? ?? 0,
       profession: profVal,
-      message: json['message'] as String?,
-      status: json['status'] as String? ?? 'pending',
-      createdAt: json['created_at'] as String?,
+      message: requestJson?['message'] as String?,
+      status: requestJson?['status'] as String? ?? 'pending',
+      createdAt: requestJson?['created_at'] as String?,
       userName: nameVal,
       userEmail: emailVal,
       userPhone: phoneVal,
@@ -133,12 +163,18 @@ class VolunteerRequest {
       userBloodGroup: bgVal,
       userLocation: locationDisplay,
       dateOfBirth: dobVal,
-      amount: (json['amount'] as num?)?.toDouble(),
-      method: json['method'] as String?,
-      transactionId: json['transaction_id'] as String?,
-      senderNumber: json['sender_number'] as String?,
-      paymentStatus: json['payment_status'] as String?,
-      adminNote: json['admin_note'] as String?,
+      amount: (requestJson?['amount'] as num?)?.toDouble(),
+      method: requestJson?['method'] as String?,
+      transactionId: requestJson?['transaction_id'] as String?,
+      senderNumber: requestJson?['sender_number'] as String?,
+      paymentStatus: requestJson?['payment_status'] as String?,
+      adminNote: requestJson?['admin_note'] as String?,
+      walletBalance: balanceVal,
+      volunteerEarnings: earningsVal,
+      volunteerWithdrawals: withdrawalsVal,
+      isBlocked: isBlockedVal,
+      donationsCount: donationsVal,
+      livesSavedCount: livesSavedVal,
     );
   }
 }

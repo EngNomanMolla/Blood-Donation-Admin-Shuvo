@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/donor_list_controller.dart';
 import '../widgets/filter_dropdown.dart';
 import '../widgets/user_card.dart';
+import '../widgets/user_card_shimmer.dart';
 
 class DonorListScreen extends GetView<DonorListController> {
   const DonorListScreen({super.key});
@@ -222,19 +223,137 @@ class DonorListScreen extends GetView<DonorListController> {
           ),
         ),
         const SizedBox(height: 16),
-        Obx(() => ListView.separated(
+        Obx(() {
+          if (controller.isLoading.value) {
+            return ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.donors.length,
+              itemCount: 4,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return UserCard(
-                  user: controller.donors[index],
-                  onTap: () => Get.toNamed('/donor-details', arguments: controller.donors[index]),
-                );
-              },
-            )),
+              itemBuilder: (context, index) => const UserCardShimmer(),
+            );
+          }
+          if (controller.donors.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Text(
+                  'No donors found.',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            );
+          }
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.donors.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return UserCard(
+                user: controller.donors[index],
+                onTap: () => Get.toNamed('/donor-details', arguments: controller.donors[index]),
+              );
+            },
+          );
+        }),
+        const SizedBox(height: 20),
+        _buildPaginationControls(),
       ],
     );
+  }
+
+  Widget _buildPaginationControls() {
+    return Obx(() {
+      final current = controller.currentPage.value;
+      final total = controller.totalPages.value;
+
+      if (total <= 1) return const SizedBox.shrink();
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Prev Button
+          InkWell(
+            onTap: current > 1 ? () => controller.fetchDonors(current - 1) : null,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: current > 1 ? Colors.white : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: current > 1 ? Colors.grey.shade300 : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.chevron_left_rounded,
+                    color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Prev',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: current > 1 ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Page Indicator
+          Text(
+            'Page $current of $total',
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A1A2E),
+            ),
+          ),
+          // Next Button
+          InkWell(
+            onTap: current < total ? () => controller.fetchDonors(current + 1) : null,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: current < total ? Colors.white : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: current < total ? Colors.grey.shade300 : Colors.grey.shade200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Next',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: current < total ? const Color(0xFF1A1A2E) : Colors.grey.shade400,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
