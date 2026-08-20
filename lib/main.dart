@@ -8,10 +8,10 @@ import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final prefs = await SharedPreferences.getInstance();
   final String? token = prefs.getString('admin_token');
-  
+
   bool isConnected = false;
   if (token != null) {
     if (kIsWeb) {
