@@ -15,6 +15,7 @@ abstract class Routes {
   static const SUBSCRIPTION_PLANS = _Paths.SUBSCRIPTION_PLANS;
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
+  static const WITHDRAWAL_LIST = _Paths.WITHDRAWAL_LIST;
 }
 
 abstract class _Paths {
@@ -32,4 +33,5 @@ abstract class _Paths {
   static const SUBSCRIPTION_PLANS = '/subscription-plans';
   static const LOGIN = '/login';
   static const REGISTER = '/register';
+  static const WITHDRAWAL_LIST = '/withdrawal-list';
 }

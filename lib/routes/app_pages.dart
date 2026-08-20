@@ -24,6 +24,8 @@ import '../views/screens/subscription_plans_screen.dart';
 import '../controllers/auth_controller.dart';
 import '../views/screens/login_screen.dart';
 import '../views/screens/register_screen.dart';
+import '../views/screens/withdrawal_list_screen.dart';
+import '../controllers/withdrawal_controller.dart';
 
 part 'app_routes.dart';
 
@@ -124,6 +126,13 @@ class AppPages {
       page: () => const RegisterScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut<AuthController>(() => AuthController());
+      }),
+    ),
+    GetPage(
+      name: _Paths.WITHDRAWAL_LIST,
+      page: () => const WithdrawalListScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<WithdrawalController>(() => WithdrawalController());
       }),
     ),
   ];

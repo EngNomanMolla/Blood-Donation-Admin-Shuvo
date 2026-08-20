@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/recharge_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/withdrawal_controller.dart';
 import '../widgets/dashboard_menu_card.dart';
 import '../../routes/app_pages.dart';
 
@@ -133,8 +134,9 @@ class AdminPanelScreen extends GetView<AdminController> {
   // ── 2-Column Menu Grid ─────────────────────────────────────────────────────
 
   Widget _buildMenuGrid(BuildContext context) {
-    // Inject/Find RechargeController to listen to dynamic pending requests count
+    // Inject/Find RechargeController and WithdrawalController to listen to dynamic pending requests count
     final rechargeController = Get.put(RechargeController());
+    final withdrawalController = Get.put(WithdrawalController());
 
     return Column(
       children: [
@@ -233,6 +235,27 @@ class AdminPanelScreen extends GetView<AdminController> {
                 onTap: () => Get.toNamed(Routes.SEND_NOTIFICATION),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Obx(() => DashboardMenuCard(
+                    label: 'WITHDRAWALS',
+                    subtitle: 'Volunteer cashouts',
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    icon: Icons.payments_rounded,
+                    badgeCount: withdrawalController.pendingWithdrawals.value,
+                    onTap: () => Get.toNamed(Routes.WITHDRAWAL_LIST),
+                  )),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(child: SizedBox()),
           ],
         ),
       ],
