@@ -16,6 +16,8 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
   static const WITHDRAWAL_LIST = _Paths.WITHDRAWAL_LIST;
+  static const BANNERS = _Paths.BANNERS;
+  static const COMPLAINTS = _Paths.COMPLAINTS;
 }
 
 abstract class _Paths {
@@ -34,4 +36,6 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const REGISTER = '/register';
   static const WITHDRAWAL_LIST = '/withdrawal-list';
+  static const BANNERS = '/banners';
+  static const COMPLAINTS = '/complaints';
 }

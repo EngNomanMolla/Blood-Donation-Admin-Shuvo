@@ -26,6 +26,10 @@ import '../views/screens/login_screen.dart';
 import '../views/screens/register_screen.dart';
 import '../views/screens/withdrawal_list_screen.dart';
 import '../controllers/withdrawal_controller.dart';
+import '../views/screens/banner_management_screen.dart';
+import '../controllers/banner_controller.dart';
+import '../views/screens/complaints_screen.dart';
+import '../controllers/complaint_controller.dart';
 
 part 'app_routes.dart';
 
@@ -133,6 +137,20 @@ class AppPages {
       page: () => const WithdrawalListScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut<WithdrawalController>(() => WithdrawalController());
+      }),
+    ),
+    GetPage(
+      name: _Paths.BANNERS,
+      page: () => const BannerManagementScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<BannerController>(() => BannerController());
+      }),
+    ),
+    GetPage(
+      name: _Paths.COMPLAINTS,
+      page: () => const ComplaintsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<ComplaintController>(() => ComplaintController());
       }),
     ),
   ];

@@ -15,11 +15,46 @@ class VolunteerListController extends GetxController {
   final isLoadingRequests = false.obs;
   final currentPage = 1.obs;
   final totalPages = 1.obs;
+  final pendingRequestsCount = 0.obs;
 
   @override
   void onInit() {
     super.onInit();
     fetchVolunteerRequests(1);
+    fetchPendingRequestsCount();
+  }
+
+  Future<void> fetchPendingRequestsCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('admin_token');
+
+      final response = await _connect.get(
+        '$baseUrl/admin/volunteers',
+        query: {
+          'status': 'pending',
+          'page': '1',
+        },
+        headers: {
+          'Accept': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.status.isOk && response.body != null) {
+        final Map<String, dynamic> responseData = response.body as Map<String, dynamic>;
+        final meta = responseData['meta'] as Map<String, dynamic>?;
+        if (meta != null && meta['total'] != null) {
+          pendingRequestsCount.value = meta['total'] as int;
+        } else if (responseData['active_requests'] is List) {
+          pendingRequestsCount.value = (responseData['active_requests'] as List).length;
+        } else if (responseData['data'] is List) {
+          pendingRequestsCount.value = (responseData['data'] as List).length;
+        } else {
+          pendingRequestsCount.value = 0;
+        }
+      }
+    } catch (_) {}
   }
 
   void setStatusFilter(String filter) {
@@ -166,6 +201,7 @@ class VolunteerListController extends GetxController {
       if (response.status.isOk) {
         // Refresh list
         await fetchVolunteerRequests(currentPage.value);
+        fetchPendingRequestsCount();
       } else {
         Get.snackbar(
           'Error',

@@ -4,6 +4,9 @@ import '../../controllers/admin_controller.dart';
 import '../../controllers/recharge_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/withdrawal_controller.dart';
+import '../../controllers/banner_controller.dart';
+import '../../controllers/complaint_controller.dart';
+import '../../controllers/volunteer_list_controller.dart';
 import '../widgets/dashboard_menu_card.dart';
 import '../../routes/app_pages.dart';
 
@@ -134,9 +137,12 @@ class AdminPanelScreen extends GetView<AdminController> {
   // ── 2-Column Menu Grid ─────────────────────────────────────────────────────
 
   Widget _buildMenuGrid(BuildContext context) {
-    // Inject/Find RechargeController and WithdrawalController to listen to dynamic pending requests count
+    // Inject/Find controllers to listen to dynamic counts
     final rechargeController = Get.put(RechargeController());
     final withdrawalController = Get.put(WithdrawalController());
+    final bannerController = Get.put(BannerController());
+    final complaintController = Get.put(ComplaintController());
+    final volunteerController = Get.put(VolunteerListController());
 
     return Column(
       children: [
@@ -184,7 +190,7 @@ class AdminPanelScreen extends GetView<AdminController> {
                       end: Alignment.bottomRight,
                     ),
                     icon: Icons.medical_services_rounded,
-                    badgeCount: controller.newCount,
+                    badgeCount: volunteerController.pendingRequestsCount.value,
                     onTap: () => Get.toNamed(Routes.VOLUNTEER_LIST),
                   )),
             ),
@@ -255,8 +261,37 @@ class AdminPanelScreen extends GetView<AdminController> {
                   )),
             ),
             const SizedBox(width: 12),
-            const Expanded(child: SizedBox()),
+            Expanded(
+              child: Obx(() => DashboardMenuCard(
+                    label: 'BANNERS',
+                    subtitle: 'Manage home banners',
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF06B6D4), Color(0xFF0284C7)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    icon: Icons.view_carousel_rounded,
+                    badgeCount: bannerController.bannersList.length,
+                    onTap: () => Get.toNamed(Routes.BANNERS),
+                  )),
+            ),
           ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: Obx(() => DashboardMenuCard(
+                label: 'COMPLAINTS & ADVICE',
+                subtitle: 'User feedback, complaints & advice requests',
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF43F5E), Color(0xFFBE123C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                icon: Icons.feedback_rounded,
+                badgeCount: complaintController.pendingComplaints.value,
+                onTap: () => Get.toNamed(Routes.COMPLAINTS),
+              )),
         ),
       ],
     );
