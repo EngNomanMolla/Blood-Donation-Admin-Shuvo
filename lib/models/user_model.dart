@@ -6,7 +6,7 @@ class UserModel {
   final String location;
   final String bloodGroup;
   final String phone;
-  final bool isActive;
+  bool isActive;
   bool isBlocked;
   final String? avatarAsset;
 
@@ -85,7 +85,10 @@ class UserModel {
       bloodGroup: bgVal,
       phone: phoneVal,
       isActive: json['status'] == 'active',
-      isBlocked: json['is_blocked'] == true || json['is_blocked'] == 1 || json['is_blocked'] == '1',
+      isBlocked: json['is_blocked'] == true ||
+          json['is_blocked'] == 1 ||
+          json['is_blocked'] == '1' ||
+          json['status'] == 'blocked',
       avatarAsset: json['avatar'] as String?,
     );
   }

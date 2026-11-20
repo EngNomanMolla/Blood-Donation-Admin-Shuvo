@@ -261,32 +261,46 @@ class DonorDetailsScreen extends GetView<DonorDetailsController> {
   // ── Block / Unblock Button ──────────────────────────────────────────────────
 
   Widget _buildBlockButton(donor) {
-    final isBlocked = donor.isBlocked as bool;
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton.icon(
-        onPressed: () => controller.toggleBlock(),
-        icon: Icon(
-          isBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
-          size: 20,
-        ),
-        label: Text(
-          isBlocked ? 'Unblock Donor' : 'Block Donor',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+    return Obx(() {
+      final isBlocked = controller.donor.value.isBlocked;
+      final loading = controller.isLoading.value;
+      return SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: loading ? null : () => controller.toggleBlock(),
+          icon: loading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Icon(
+                  isBlocked ? Icons.lock_open_rounded : Icons.block_rounded,
+                  size: 20,
+                ),
+          label: Text(
+            loading
+                ? 'Updating...'
+                : (isBlocked ? 'Unblock Donor' : 'Block Donor'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isBlocked ? Colors.green : Colors.red,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isBlocked ? Colors.green : Colors.red,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-      ),
-    );
+      );
+    });
   }
 }
